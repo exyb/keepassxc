@@ -135,6 +135,7 @@ public:
         Security_IconDownloadFallback,
         Security_NoConfirmMoveEntryToRecycleBin,
         Security_EnableCopyOnDoubleClick,
+        Security_EnableEditOnDoubleClick,
         Security_QuickUnlock,
         Security_DatabasePasswordMinimumQuality,
 

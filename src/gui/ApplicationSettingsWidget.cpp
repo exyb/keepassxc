@@ -231,6 +231,8 @@ void ApplicationSettingsWidget::loadSettings()
         !config()->get(Config::Security_NoConfirmMoveEntryToRecycleBin).toBool());
     m_generalUi->EnableCopyOnDoubleClickCheckBox->setChecked(
         config()->get(Config::Security_EnableCopyOnDoubleClick).toBool());
+    m_generalUi->EnableEditOnDoubleClickCheckBox->setChecked(
+        config()->get(Config::Security_EnableEditOnDoubleClick).toBool());
     m_generalUi->autoGeneratePasswordForNewEntriesCheckBox->setChecked(
         config()->get(Config::AutoGeneratePasswordForNewEntries).toBool());
 
@@ -406,6 +408,7 @@ void ApplicationSettingsWidget::saveSettings()
     config()->set(Config::Security_NoConfirmMoveEntryToRecycleBin,
                   !m_generalUi->ConfirmMoveEntryToRecycleBinCheckBox->isChecked());
     config()->set(Config::Security_EnableCopyOnDoubleClick, m_generalUi->EnableCopyOnDoubleClickCheckBox->isChecked());
+    config()->set(Config::Security_EnableEditOnDoubleClick, m_generalUi->EnableEditOnDoubleClickCheckBox->isChecked());
     config()->set(Config::AutoGeneratePasswordForNewEntries,
                   m_generalUi->autoGeneratePasswordForNewEntriesCheckBox->isChecked());
 

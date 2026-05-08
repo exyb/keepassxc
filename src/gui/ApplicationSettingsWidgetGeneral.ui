@@ -554,6 +554,13 @@
                </widget>
               </item>
               <item>
+               <widget class="QCheckBox" name="EnableEditOnDoubleClickCheckBox">
+                <property name="text">
+                 <string>Allow inline editing of fields on double click in entry view</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <layout class="QHBoxLayout" name="urlDoubleClickLayout">
                 <item>
                  <widget class="QLabel" name="urlDoubleClickLabel">
@@ -1484,6 +1491,7 @@
   <tabstop>alternativeSaveComboBox</tabstop>
   <tabstop>ConfirmMoveEntryToRecycleBinCheckBox</tabstop>
   <tabstop>EnableCopyOnDoubleClickCheckBox</tabstop>
+  <tabstop>EnableEditOnDoubleClickCheckBox</tabstop>
   <tabstop>urlDoubleClickComboBox</tabstop>
   <tabstop>useGroupIconOnEntryCreationCheckBox</tabstop>
   <tabstop>minimizeOnOpenUrlCheckBox</tabstop>

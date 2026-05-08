@@ -1531,20 +1531,82 @@ void DatabaseWidget::entryActivationSignalReceived(Entry* entry, EntryModel::Mod
         return;
     }
 
-    // Implement 'copy-on-doubleclick' functionality for certain columns
+    bool enableCopyOnDoubleClick = config()->get(Config::Security_EnableCopyOnDoubleClick).toBool();
+    bool enableEditOnDoubleClick = config()->get(Config::Security_EnableEditOnDoubleClick).toBool();
+
+    // Implement 'copy-on-doubleclick' or 'edit-on-doubleclick' functionality for certain columns
     switch (column) {
+    case EntryModel::Title:
     case EntryModel::Username:
-        if (config()->get(Config::Security_EnableCopyOnDoubleClick).toBool()) {
-            setClipboardTextAndMinimize(entry->resolveMultiplePlaceholders(entry->username()));
+    case EntryModel::Password:
+        if (enableCopyOnDoubleClick) {
+            // Copy mode: copy field value to clipboard
+            switch (column) {
+            case EntryModel::Title:
+                setClipboardTextAndMinimize(entry->resolveMultiplePlaceholders(entry->title()));
+                break;
+            case EntryModel::Username:
+                setClipboardTextAndMinimize(entry->resolveMultiplePlaceholders(entry->username()));
+                break;
+            case EntryModel::Password:
+                setClipboardTextAndMinimize(entry->resolveMultiplePlaceholders(entry->password()));
+                break;
+            default:
+                break;
+            }
+        } else if (enableEditOnDoubleClick) {
+            // Inline edit mode: trigger editing in the entry view
+            QModelIndex index = m_entryView->indexFromEntry(entry);
+            if (index.isValid()) {
+                // Create an index for the specific column in the proxy model
+                QModelIndex editIndex = m_entryView->model()->index(index.row(), column);
+                m_entryView->setCurrentIndex(editIndex);
+                m_entryView->edit(editIndex);
+            }
         } else {
+            // Default mode: open full edit dialog
             switchToEntryEdit(entry);
         }
         break;
-    case EntryModel::Password:
-        if (config()->get(Config::Security_EnableCopyOnDoubleClick).toBool()) {
-            setClipboardTextAndMinimize(entry->resolveMultiplePlaceholders(entry->password()));
+    case EntryModel::Url:
+        if (!entry->url().isEmpty()) {
+            if (enableCopyOnDoubleClick) {
+                setClipboardTextAndMinimize(entry->resolveMultiplePlaceholders(entry->url()));
+            } else if (enableEditOnDoubleClick) {
+                // Inline edit mode for URL
+                QModelIndex index = m_entryView->indexFromEntry(entry);
+                if (index.isValid()) {
+                    QModelIndex editIndex = m_entryView->model()->index(index.row(), column);
+                    m_entryView->setCurrentIndex(editIndex);
+                    m_entryView->edit(editIndex);
+                }
+            } else {
+                // Default mode: use URL double-click action setting
+                switch (config()->get(Config::URLDoubleClickAction).toInt()) {
+                case 2: // Edit entry
+                    switchToEntryEdit(entry);
+                    break;
+                case 1: // Copy entry URL to clipboard
+                    setClipboardTextAndMinimize(entry->resolveMultiplePlaceholders(entry->url()));
+                    break;
+                case 0: // Open entry URL in browser (default)
+                default:
+                    openUrlForEntry(entry);
+                    break;
+                }
+            }
         } else {
-            switchToEntryEdit(entry);
+            // Empty URL - edit or open dialog based on mode
+            if (enableEditOnDoubleClick) {
+                QModelIndex index = m_entryView->indexFromEntry(entry);
+                if (index.isValid()) {
+                    QModelIndex editIndex = m_entryView->model()->index(index.row(), column);
+                    m_entryView->setCurrentIndex(editIndex);
+                    m_entryView->edit(editIndex);
+                }
+            } else {
+                switchToEntryEdit(entry);
+            }
         }
         break;
     case EntryModel::Totp:
@@ -1567,22 +1629,6 @@ void DatabaseWidget::entryActivationSignalReceived(Entry* entry, EntryModel::Mod
     // TODO: switch to 'Attachments' tab in details view/pane
     // case EntryModel::Attachments:
     //    break;
-    case EntryModel::Url:
-        if (!entry->url().isEmpty()) {
-            switch (config()->get(Config::URLDoubleClickAction).toInt()) {
-            case 2: // Edit entry
-                switchToEntryEdit(entry);
-                break;
-            case 1: // Copy entry URL to clipboard
-                setClipboardTextAndMinimize(entry->resolveMultiplePlaceholders(entry->url()));
-                break;
-            case 0: // Open entry URL in browser (default)
-            default:
-                openUrlForEntry(entry);
-                break;
-            }
-        }
-        break;
     default:
         switchToEntryEdit(entry);
     }

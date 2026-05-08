@@ -129,6 +129,23 @@ QVariant EntryModel::data(const QModelIndex& index, int role) const
     Entry* entry = entryFromIndex(index);
     EntryAttributes* attr = entry->attributes();
 
+    // For editable columns, return the actual value for both DisplayRole and EditRole
+    // For EditRole, we return the raw value without placeholder resolution or hiding
+    if (role == Qt::EditRole) {
+        switch (index.column()) {
+        case Title:
+            return entry->title();
+        case Username:
+            return entry->username();
+        case Password:
+            return entry->password();
+        case Url:
+            return entry->url();
+        default:
+            return {};
+        }
+    }
+
     if (role == Qt::DisplayRole) {
         QString result;
         switch (index.column()) {
@@ -366,6 +383,41 @@ QVariant EntryModel::data(const QModelIndex& index, int role) const
     return {};
 }
 
+bool EntryModel::setData(const QModelIndex& index, const QVariant& value, int role)
+{
+    if (!index.isValid() || role != Qt::EditRole) {
+        return false;
+    }
+
+    Entry* entry = entryFromIndex(index);
+    if (!entry) {
+        return false;
+    }
+
+    QString newText = value.toString();
+
+    switch (index.column()) {
+    case Title:
+        entry->setTitle(newText);
+        break;
+    case Username:
+        entry->setUsername(newText);
+        break;
+    case Password:
+        entry->setPassword(newText);
+        break;
+    case Url:
+        entry->setUrl(newText);
+        break;
+    default:
+        return false;
+    }
+
+    // Emit dataChanged to update the view
+    emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
+    return true;
+}
+
 QVariant EntryModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     Q_UNUSED(orientation);
@@ -461,9 +513,25 @@ Qt::ItemFlags EntryModel::flags(const QModelIndex& modelIndex) const
 {
     if (!modelIndex.isValid()) {
         return Qt::NoItemFlags;
-    } else {
-        return QAbstractItemModel::flags(modelIndex) | Qt::ItemIsDragEnabled;
     }
+
+    Qt::ItemFlags flags = QAbstractItemModel::flags(modelIndex) | Qt::ItemIsDragEnabled;
+
+    // Make certain columns editable when inline edit is enabled
+    if (config()->get(Config::Security_EnableEditOnDoubleClick).toBool()) {
+        switch (modelIndex.column()) {
+        case Title:
+        case Username:
+        case Password:
+        case Url:
+            flags |= Qt::ItemIsEditable;
+            break;
+        default:
+            break;
+        }
+    }
+
+    return flags;
 }
 
 QStringList EntryModel::mimeTypes() const
